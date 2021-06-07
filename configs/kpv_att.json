@@ -1,0 +1,25 @@
+{
+    "n_repeat": 20,
+    "data": {
+        "name" : "demand_att",
+        "n_sample" : 5000,
+        "n_sample_additional" : 1000
+    },
+    "model": {
+        "name": "kpv",
+        "base_param": {
+            "lam1_max": 0.1,
+            "lam1_min": 0.001,
+            "n_lam1_search": 10,
+            "lam2_max": 0.1,
+            "lam2_min": 0.001,
+            "n_lam2_search": 10,
+            "split_ratio": 0.5,
+            "scale": 0.5
+        },
+        "lam3_max": 0.1,
+        "lam3_min": 0.001,
+        "n_lam3_search": 10,
+        "scale": 0.5
+    }
+}

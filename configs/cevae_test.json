@@ -1,0 +1,14 @@
+{
+    "n_repeat": 1,
+    "data": {
+        "name" : "cevae",
+        "n_sample" : 1000
+    },
+    "model": {
+        "name": "cevae",
+        "n_epoch": 1000,
+        "weight_decay": 0.0001,
+        "n_learning_sample": 10,
+        "hidden_dim": 1
+    }
+}

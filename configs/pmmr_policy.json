@@ -1,0 +1,20 @@
+{
+    "n_repeat": 20,
+    "data": {
+        "name" : "demand_policy",
+        "n_sample" : 5000,
+        "n_sample_additional" : 1000
+    },
+    "model": {
+        "name": "pmmr",
+        "base_param": {
+            "lam1": 0.01,
+            "lam2": 0.01,
+            "scale": 0.5
+        },
+        "lam3_max": 0.1,
+        "lam3_min": 0.001,
+        "n_lam3_search": 10,
+        "scale": 0.5
+    }
+}

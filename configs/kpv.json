@@ -1,0 +1,14 @@
+{
+    "n_repeat": 1,
+    "data": {
+        "name" : "demand",
+        "n_sample" : 5000
+    },
+    "model": {
+        "name": "kpv",
+        "lam1": 0.001,
+        "lam2": 0.001,
+        "split_ratio": 0.5,
+        "scale": 0.5
+    }
+}

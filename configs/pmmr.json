@@ -1,0 +1,13 @@
+{
+    "n_repeat": 1,
+    "data": {
+        "name" : "dsprite",
+        "n_sample" : 5000
+    },
+    "model": {
+        "name": "pmmr",
+        "lam1": 0.01,
+        "lam2": 0.01,
+        "scale": 0.5
+    }
+}

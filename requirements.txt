@@ -1,0 +1,11 @@
+numpy~=1.20.1
+torch~=1.8.1
+filelock~=3.0.12
+scikit-learn~=0.24.1
+pandas~=1.2.3
+jax~=0.2.10
+scipy~=1.6.1
+requests~=2.25.1
+joblib~=1.0.1
+click~=7.1.2
+jaxlib==0.1.65
