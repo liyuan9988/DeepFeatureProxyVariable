@@ -1,0 +1,15 @@
+{
+    "n_repeat": 10,
+    "data": {
+        "name" : "deaner",
+        "id" : ["IM", "IR"]
+    },
+    "model": {
+        "name": "cevae",
+        "n_epoch": 100,
+        "weight_decay": 0.0001,
+        "n_learning_sample": 10,
+        "hidden_dim": 20,
+        "early_stop": 5
+    }
+}

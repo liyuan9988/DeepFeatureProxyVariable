@@ -1,5 +1,5 @@
 {
-    "n_repeat": 20,
+    "n_repeat": 1,
     "data": {
         "name" : "demand_policy",
         "n_sample" : 5000,

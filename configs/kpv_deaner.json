@@ -1,0 +1,18 @@
+{
+    "n_repeat": 10,
+    "data": {
+        "name" : "deaner",
+        "id": ["IM", "IR"],
+        "preprocess" : "ScaleAll"
+    },
+    "model": {
+        "name": "kpv",
+        "lam1_max": 0.1,
+        "lam1_min": 0.001,
+        "n_lam1_search": 10,
+        "lam2": 0.001,
+        "split_ratio": -1,
+        "scale": 1.5,
+        "data_scaling": true
+    }
+}

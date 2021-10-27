@@ -1,8 +1,8 @@
 {
-    "n_repeat": 1,
+    "n_repeat": 10,
     "data": {
-        "name" : "demand",
-        "n_sample" : 5000
+        "name" : "deaner",
+        "id": ["IM", "IR"]
     },
     "model": {
         "name": "dfpv",

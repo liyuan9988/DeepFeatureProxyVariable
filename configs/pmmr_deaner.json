@@ -1,0 +1,14 @@
+{
+    "n_repeat": 10,
+    "data": {
+        "name" : "deaner",
+        "id": ["IM", "IR"]
+    },
+    "model": {
+        "name": "pmmr",
+        "lam1": 1.0e-3,
+        "lam2": 1.0e-3,
+        "scale": 1.5,
+        "data_scaling": true
+    }
+}

@@ -1,13 +1,13 @@
 {
-    "n_repeat": 1,
+    "n_repeat": 20,
     "data": {
-        "name" : "demand",
-        "n_sample" : 5000
+        "name" : "kpv",
+        "n_sample" : [500, 1000]
     },
     "model": {
         "name": "dfpv",
-        "lam1": 0.1,
-        "lam2": 0.1,
+        "lam1": 0.01,
+        "lam2": 0.01,
         "stage1_iter": 20,
         "stage2_iter": 1,
         "n_epoch": 100,
@@ -15,7 +15,6 @@
         "treatment_weight_decay": 0.1,
         "treatment_proxy_weight_decay": 0.1,
         "outcome_proxy_weight_decay": 0.1,
-        "backdoor_weight_decay": 0.0,
-        "data_scaling": true
+        "backdoor_weight_decay": 0.0
     }
 }
