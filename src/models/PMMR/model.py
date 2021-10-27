@@ -3,15 +3,18 @@ from typing import Tuple, Optional, Dict, Any
 from pathlib import Path
 
 from src.utils.kernel_func import ColumnWiseGaussianKernel, AbsKernel, BinaryKernel, GaussianKernel
-from src.data import generate_train_data, generate_test_data
-from src.data.data_class import PVTrainDataSet, PVTestDataSet
+from src.data.ate import generate_train_data_ate, generate_test_data_ate, get_preprocessor_ate
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet
 
 
 def get_kernel_func(data_name: str) -> Tuple[AbsKernel, AbsKernel, AbsKernel, AbsKernel]:
     if data_name == "dsprite":
         return BinaryKernel(), GaussianKernel(), GaussianKernel(), GaussianKernel()
+    elif data_name == "deaner":
+        return GaussianKernel(), GaussianKernel(), GaussianKernel(), GaussianKernel()
     else:
         return ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel()
+
 
 
 class PMMRModel:
@@ -39,6 +42,7 @@ class PMMRModel:
         self.outcome_proxy_kernel_func = kernels[2]
         self.backdoor_kernel_func = kernels[3]
         n_train = train_data.treatment.shape[0]
+
 
         # Set scales to be median
         self.treatment_proxy_kernel_func.fit(train_data.treatment_proxy, scale=self.scale)
@@ -76,6 +80,13 @@ class PMMRModel:
         pred = self.alpha.T @ test_kernel
         return pred.T
 
+    def predict_bridge(self, treatment: np.ndarray, output_proxy: np.ndarray) -> np.ndarray:
+        test_kernel = self.treatment_kernel_func.cal_kernel_mat(self.train_treatment, treatment)
+        test_kernel *= self.outcome_proxy_kernel_func.cal_kernel_mat(self.train_outcome_proxy, output_proxy)
+
+        pred = self.alpha.T @ test_kernel
+        return pred.T
+
     def evaluate(self, test_data: PVTestDataSet):
         pred = self.predict(treatment=test_data.treatment)
         return np.mean((pred - test_data.structural) ** 2)
@@ -84,13 +95,20 @@ class PMMRModel:
 def pmmr_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                      one_mdl_dump_dir: Path,
                      random_seed: int = 42, verbose: int = 0):
-    train_data = generate_train_data(data_config, random_seed)
-    test_data = generate_test_data(data_config)
+    train_data_org = generate_train_data_ate(data_config=data_config, rand_seed=random_seed)
+    test_data_org = generate_test_data_ate(data_config=data_config)
+
+    preprocessor = get_preprocessor_ate(data_config.get("preprocess", "Identity"))
+    train_data = preprocessor.preprocess_for_train(train_data_org)
+    test_data = preprocessor.preprocess_for_test_input(test_data_org)
+
     model = PMMRModel(**model_param)
     model.fit(train_data, data_config["name"])
     pred = model.predict(test_data.treatment)
-    np.savetxt(one_mdl_dump_dir.joinpath(f"{random_seed}.pred.txt"), pred)
+    pred = preprocessor.postprocess_for_prediction(pred)
     if test_data.structural is not None:
-        return np.mean((pred - test_data.structural)**2)
+        if data_config["name"] in ("kpv", "deaner"):
+            return np.mean(np.abs(pred - test_data.structural))
+        return np.mean((pred - test_data.structural) ** 2)
     else:
         return 0.0

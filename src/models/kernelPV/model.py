@@ -5,9 +5,11 @@ import jax.numpy as jnp
 import jax.scipy.linalg as jsla
 import operator
 
+from sklearn.preprocessing import StandardScaler
+
 from src.utils.kernel_func import ColumnWiseGaussianKernel, AbsKernel, BinaryKernel, GaussianKernel
-from src.data import generate_train_data, generate_test_data
-from src.data.data_class import PVTrainDataSet, PVTestDataSet, split_train_data
+from src.data.ate import generate_train_data_ate, generate_test_data_ate, get_preprocessor_ate
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet, split_train_data
 from src.utils.jax_utils import Hadamard_prod, mat_mul, mat_trans, modif_kron, cal_loocv_emb, cal_loocv_alpha, \
     stage2_weights
 
@@ -46,6 +48,7 @@ class KernelPVModel:
         self.split_ratio: float = split_ratio
         self.x_mean_vec = None
 
+
     def cal_kernel_mat_ZAX(self, data1: PVTrainDataSet, data2: PVTrainDataSet):
         kernel_mat = self.treatment_kernel_func.cal_kernel_mat(data1.treatment, data2.treatment)
         kernel_mat *= self.treatment_proxy_kernel_func.cal_kernel_mat(data1.treatment_proxy,
@@ -83,6 +86,7 @@ class KernelPVModel:
         self.backdoor_kernel_func = kernels[3]
         n_train_1st = train_data_1st.treatment.shape[0]
         n_train_2nd = train_data_2nd.treatment.shape[0]
+
 
         # Set scales to be median
         self.treatment_proxy_kernel_func.fit(train_data_1st.treatment_proxy, scale=self.scale)
@@ -126,11 +130,22 @@ class KernelPVModel:
         self.train_outcome_proxy = train_data_1st.outcome_proxy
 
     def predict(self, treatment: np.ndarray) -> np.ndarray:
+
         test_kernel = self.treatment_kernel_func.cal_kernel_mat(self.train_treatment, treatment)
         if self.x_mean_vec is not None:
             test_kernel = test_kernel * self.x_mean_vec
+        pred = jnp.asarray(mat_mul(mat_mul(self.w_mean_vec.T, self.alpha), test_kernel)).T
+        return pred
 
-        return jnp.asarray(mat_mul(mat_mul(self.w_mean_vec.T, self.alpha), test_kernel)).T
+    def predict_bridge(self, treatment: np.ndarray, output_proxy: np.ndarray):
+        test_kernel = self.treatment_kernel_func.cal_kernel_mat(self.train_treatment, treatment)
+        proxy_kernel = self.outcome_proxy_kernel_func.cal_kernel_mat(output_proxy, self.train_outcome_proxy)
+        n_test = treatment.shape[0]
+        pred = [jnp.asarray(mat_mul(mat_mul(proxy_kernel[[i], :], self.alpha), test_kernel[:, [i]])) for i in range(n_test)]
+        pred = np.array(pred)
+        if pred.ndim == 1:
+            pred = pred[:, np.newaxis]
+        return pred
 
     def evaluate(self, test_data: PVTestDataSet):
         pred = self.predict(treatment=test_data.treatment)
@@ -140,13 +155,21 @@ class KernelPVModel:
 def kpv_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                     one_mdl_dump_dir: Path,
                     random_seed: int = 42, verbose: int = 0):
-    train_data = generate_train_data(data_config, random_seed)
-    test_data = generate_test_data(data_config)
+    train_data_org = generate_train_data_ate(data_config=data_config, rand_seed=random_seed)
+    test_data_org = generate_test_data_ate(data_config=data_config)
+
+    preprocessor = get_preprocessor_ate(data_config.get("preprocess", "Identity"))
+    train_data = preprocessor.preprocess_for_train(train_data_org)
+    test_data = preprocessor.preprocess_for_test_input(test_data_org)
+
     model = KernelPVModel(**model_param)
     model.fit(train_data, data_config["name"])
     pred = model.predict(test_data.treatment)
+    pred = preprocessor.postprocess_for_prediction(pred)
     np.savetxt(one_mdl_dump_dir.joinpath(f"{random_seed}.pred.txt"), pred)
     if test_data.structural is not None:
+        if data_config["name"] in ("kpv", "deaner"):
+            return np.mean(np.abs(pred - test_data.structural))
         return np.mean((pred - test_data.structural) ** 2)
     else:
         return 0.0

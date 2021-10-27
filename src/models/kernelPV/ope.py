@@ -1,13 +1,13 @@
 import numpy as np
 import operator
 import jax.numpy as jnp
-from typing import Tuple, Optional, Dict, Any
+from typing import Dict, Any
 from pathlib import Path
 
 from src.utils.jax_utils import mat_mul, cal_loocv_emb
 from src.utils.kernel_func import AbsKernel, ColumnWiseGaussianKernel
 from src.data.ope.data_class import OPETrainDataSet, OPETestDataSet
-from src.data.ope import generate_train_data, generate_test_data
+from src.data.ope import generate_train_data_ope, generate_test_data_ope
 from src.models.kernelPV.model import KernelPVModel
 
 
@@ -59,11 +59,27 @@ class KernelPVOPEModel:
         return np.mean((pred - test_data.structural) ** 2)
 
 
+def kpv_ope_experiments_simple(data_config: Dict[str, Any], model_param: Dict[str, Any],
+                               one_mdl_dump_dir: Path,
+                               random_seed: int = 42, verbose: int = 0):
+
+    org_data, additional_data = generate_train_data_ope(data_config, random_seed)
+    test_data = generate_test_data_ope(data_config)
+    base_model = KernelPVModel(**model_param["base_param"])
+    if data_config["name"].startswith("demand"):
+        data_name = "demand"
+    else:
+        raise ValueError
+    base_model.fit(org_data, data_name)
+    value_pred = np.mean(base_model.predict_bridge(additional_data.new_treatment,
+                                                   additional_data.outcome_proxy))
+    return np.abs(value_pred - np.mean(test_data.structural))
+
 def kpv_ope_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                         one_mdl_dump_dir: Path,
                         random_seed: int = 42, verbose: int = 0):
-    org_data, additional_data = generate_train_data(data_config, random_seed)
-    test_data = generate_test_data(data_config)
+    org_data, additional_data = generate_train_data_ope(data_config, random_seed)
+    test_data = generate_test_data_ope(data_config)
     base_model = KernelPVModel(**model_param["base_param"])
     if data_config["name"].startswith("demand"):
         data_name = "demand"

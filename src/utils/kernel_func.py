@@ -10,6 +10,15 @@ class AbsKernel:
     def cal_kernel_mat(self, data1: np.ndarray, data2: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
+class LinearDotKernel(AbsKernel):
+    def __init__(self):
+        super(LinearDotKernel, self).__init__()
+
+    def fit(self, data: np.ndarray, **kwargs) -> None:
+        pass
+
+    def cal_kernel_mat(self, data1: np.ndarray, data2: np.ndarray) -> np.ndarray:
+        return data1.dot(data2.T)
 
 class BinaryKernel(AbsKernel):
 
@@ -23,6 +32,7 @@ class BinaryKernel(AbsKernel):
         res = data1.dot(data2.T)
         res += (1 - data1).dot(1 - data2.T)
         return res
+
 
 
 class WarfarinBackdoorKernel(AbsKernel):

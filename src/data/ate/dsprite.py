@@ -4,9 +4,9 @@ from itertools import product
 from filelock import FileLock
 import pathlib
 
-from ..data.data_class import PVTrainDataSet, PVTestDataSet
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet
 
-DATA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent.joinpath("data/")
+DATA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent.parent.joinpath("data/")
 
 
 def image_id(latent_bases: np.ndarray, posX_id_arr: np.ndarray, posY_id_arr: np.ndarray,

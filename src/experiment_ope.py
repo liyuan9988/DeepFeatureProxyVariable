@@ -6,20 +6,20 @@ from joblib import Parallel, delayed
 import logging
 
 from src.utils import grid_search_dict
-from src.models.kernelPV.ope import kpv_ope_experiments
-from src.models.PMMR.ope import pmmr_ope_experiments
-from src.models.DFPV.ope import dfpv_ope_experiments
+from src.models.kernelPV.ope import kpv_ope_experiments_simple
+from src.models.PMMR.ope import pmmr_ope_experiments_simple
+from src.models.DFPV.ope import dfpv_ope_experiments_simple
 
 logger = logging.getLogger()
 
 
 def get_run_func(mdl_name: str):
     if mdl_name == "kpv":
-        return kpv_ope_experiments
+        return kpv_ope_experiments_simple
     elif mdl_name == "pmmr":
-        return pmmr_ope_experiments
+        return pmmr_ope_experiments_simple
     elif mdl_name == "dfpv":
-        return dfpv_ope_experiments
+        return dfpv_ope_experiments_simple
     else:
         raise ValueError(f"name {mdl_name} is not known")
 

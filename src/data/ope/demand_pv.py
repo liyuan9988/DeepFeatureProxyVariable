@@ -3,14 +3,16 @@ from numpy.random import default_rng
 
 from .data_class import OPETrainDataSet, OPETestDataSet
 
-from src.data.demand_pv import cal_outcome, generatate_demand_core
+from src.data.ate.demand_pv import cal_outcome, generatate_demand_core
 
 
 def generate_train_demand_pv_att(n_sample_additional: int, seed=42, **kwargs):
     rng = default_rng(seed=10000 + seed)
     demand, cost1, cost2, price, views, outcome = generatate_demand_core(n_sample_additional, rng)
+    new_treatment = np.maximum(price * 0.7, 10.0)
     return OPETrainDataSet(outcome_proxy=views[:, np.newaxis],
-                           covariate=price[:, np.newaxis])
+                           covariate=price[:, np.newaxis],
+                           new_treatment=new_treatment[:, np.newaxis])
 
 
 def generate_test_demand_pv_att():
@@ -30,8 +32,10 @@ def generate_test_demand_pv_att():
 def generate_train_demand_pv_policy(n_sample_additional: int, seed=42, **kwargs):
     rng = default_rng(seed=10000 + seed)
     demand, cost1, cost2, price, views, outcome = generatate_demand_core(n_sample_additional, rng)
+    new_treatment = 23 + cost1 * cost2
     return OPETrainDataSet(outcome_proxy=views[:, np.newaxis],
-                           covariate=np.c_[cost1, cost2])
+                           covariate=np.c_[cost1, cost2],
+                           new_treatment=new_treatment[:, np.newaxis])
 
 
 def generate_test_demand_pv_policy():

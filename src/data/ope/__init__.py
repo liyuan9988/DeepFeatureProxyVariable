@@ -1,13 +1,13 @@
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 
 from .demand_pv import generate_test_demand_pv_att, generate_train_demand_pv_att, generate_test_demand_pv_policy, \
     generate_train_demand_pv_policy
-from ..demand_pv import generate_train_demand_pv, generate_test_demand_pv
-from ..data_class import PVTestDataSet, PVTrainDataSet
+from src.data.ate.demand_pv import generate_train_demand_pv
+from src.data.ate.data_class import PVTrainDataSet
 from .data_class import OPETrainDataSet, OPETestDataSet
 
 
-def generate_train_data(data_config: Dict[str, Any], rand_seed: int) -> Tuple[PVTrainDataSet, OPETrainDataSet]:
+def generate_train_data_ope(data_config: Dict[str, Any], rand_seed: int) -> Tuple[PVTrainDataSet, OPETrainDataSet]:
     data_name = data_config["name"]
     if data_name == "demand_att":
         org_data = generate_train_demand_pv(seed=rand_seed, **data_config)
@@ -21,7 +21,7 @@ def generate_train_data(data_config: Dict[str, Any], rand_seed: int) -> Tuple[PV
         raise ValueError(f"data name {data_name} is not valid")
 
 
-def generate_test_data(data_config: Dict[str, Any]) -> OPETestDataSet:
+def generate_test_data_ope(data_config: Dict[str, Any]) -> OPETestDataSet:
     data_name = data_config["name"]
     if data_name == "demand_att":
         return generate_test_demand_pv_att()

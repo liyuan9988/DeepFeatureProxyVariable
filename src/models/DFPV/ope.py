@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 import torch
-from torch import nn
 import logging
 from pathlib import Path
 
@@ -10,7 +9,7 @@ import numpy as np
 from src.models.DFPV.nn_structure.ope_nn_structure import build_extractor_ope
 from src.models.DFPV.trainer import DFPVTrainer
 from src.models.DFPV.model import DFPVModel
-from src.data.ope import generate_train_data, generate_test_data
+from src.data.ope import generate_train_data_ope, generate_test_data_ope
 from src.data.ope.data_class import OPETrainDataSetTorch, OPETestDataSetTorch, OPETrainDataSet, OPETestDataSet
 
 from src.utils.pytorch_linear_reg_utils import fit_linear, linear_reg_pred, add_const_col, linear_reg_loss
@@ -102,12 +101,24 @@ class DFPVOPEModel(object):
         return self.evaluate_t(OPETestDataSetTorch.from_numpy(test_data)).data.item()
 
 
+def dfpv_ope_experiments_simple(data_config: Dict[str, Any], model_param: Dict[str, Any],
+                                one_mdl_dump_dir: Path, random_seed: int = 42, verbose: int = 0):
+    dump_dir = one_mdl_dump_dir.joinpath(f"{random_seed}")
+    torch.manual_seed(random_seed)
+    org_data, additional_data = generate_train_data_ope(data_config=data_config, rand_seed=random_seed)
+    test_data = generate_test_data_ope(data_config=data_config)
+    trainer = DFPVTrainer(data_config, model_param["base_param"], False, dump_dir)
+    base_mdl = trainer.train(org_data, verbose)
+    value_pred = np.mean(base_mdl.predict_bridge(additional_data.new_treatment, additional_data.outcome_proxy))
+    return np.abs(np.mean(value_pred) - np.mean(test_data.structural))
+
+
 def dfpv_ope_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                          one_mdl_dump_dir: Path, random_seed: int = 42, verbose: int = 0):
     dump_dir = one_mdl_dump_dir.joinpath(f"{random_seed}")
     torch.manual_seed(random_seed)
-    org_data, additional_data = generate_train_data(data_config=data_config, rand_seed=random_seed)
-    test_data = generate_test_data(data_config=data_config)
+    org_data, additional_data = generate_train_data_ope(data_config=data_config, rand_seed=random_seed)
+    test_data = generate_test_data_ope(data_config=data_config)
 
     trainer = DFPVTrainer(data_config, model_param["base_param"], False, dump_dir)
     base_mdl = trainer.train(org_data, verbose)

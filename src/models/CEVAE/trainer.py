@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 import torch
-from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 import logging
 from pathlib import Path
@@ -10,8 +9,9 @@ import numpy as np
 
 from src.models.CEVAE.nn_structure import build_extractor
 from src.models.CEVAE.model import CEVAEModel
-from src.data import generate_train_data, generate_test_data
-from src.data.data_class import PVTrainDataSetTorch, PVTestDataSetTorch, PVTrainDataSet, split_train_data
+from src.data.ate import generate_train_data_ate, generate_test_data_ate, get_preprocessor_ate
+from src.data.ate.data_class import PVTrainDataSetTorch, PVTestDataSetTorch, PVTrainDataSet, split_train_data, \
+    PVTestDataSet
 
 logger = logging.getLogger()
 
@@ -38,8 +38,8 @@ class CEVAETrainer(object):
             self.distribution.to("cuda:0")
 
         self.opt = torch.optim.Adamax(self.distribution.parameters(),
-                                    weight_decay=self.weight_decay,
-                                    lr=0.01)
+                                      weight_decay=self.weight_decay,
+                                      lr=0.01)
 
         self.scheduler = ExponentialLR(self.opt, gamma=0.99)
 
@@ -77,7 +77,6 @@ class CEVAETrainer(object):
             if early_stop_count >= self.early_stop:
                 break
 
-
             if verbose >= 2:
                 logger.info(f"{t}-Iteration: VAE: {loss.item()}")
 
@@ -89,26 +88,27 @@ class CEVAETrainer(object):
                     oos_loss: float = mdl.evaluate_t(test_data_t).data.item()
                     logger.info(f"{t}-Iteration: oos_loss: {oos_loss}")
 
-
             if verbose >= 2 and t % 10 == 0:
                 with torch.no_grad():
                     logger.info(self.distribution.q_z_xty(val_proxy,
                                                           val_data_t.treatment,
                                                           val_data_t.outcome).mean)
 
-
         mdl = CEVAEModel(self.distribution)
-        mdl.fit(proxy, train_data_t.treatment, train_data_t.outcome,
-                10)
+        mdl.fit(proxy, train_data_t.treatment, train_data_t.outcome, 10)
         return mdl
 
 
 def cevae_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                       one_mdl_dump_dir: Path, random_seed: int = 42, verbose: int = 0):
     dump_dir = one_mdl_dump_dir.joinpath(f"{random_seed}")
-    train_data = generate_train_data(data_config=data_config, rand_seed=random_seed)
+    train_data_org = generate_train_data_ate(data_config=data_config, rand_seed=random_seed)
+    test_data_org = generate_test_data_ate(data_config=data_config)
 
-    test_data = generate_test_data(data_config=data_config)
+    preprocessor = get_preprocessor_ate(data_config.get("preprocess", "Identity"))
+    train_data = preprocessor.preprocess_for_train(train_data_org)
+    test_data = preprocessor.preprocess_for_test_input(test_data_org)
+
     torch.manual_seed(random_seed)
     trainer = CEVAETrainer(data_config, model_param, False, dump_dir)
 
@@ -118,10 +118,12 @@ def cevae_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
         test_data_t = test_data_t.to_gpu()
 
     mdl = trainer.train(train_data, test_data_t, verbose)
-
     pred: np.ndarray = mdl.predict_t(test_data_t.treatment).data.cpu().numpy()
+    pred = preprocessor.postprocess_for_prediction(pred)
     oos_loss = 0.0
     if test_data.structural is not None:
-        oos_loss: float = mdl.evaluate_t(test_data_t).data.item()
+        oos_loss: float = np.mean((pred - test_data_org.structural) ** 2)
+        if data_config["name"] in ["kpv", "deaner"]:
+            oos_loss = np.mean(np.abs(pred - test_data_org.structural))
     np.savetxt(one_mdl_dump_dir.joinpath(f"{random_seed}.pred.txt"), pred)
     return oos_loss

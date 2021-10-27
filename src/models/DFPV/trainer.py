@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 import torch
 from torch import nn
 import logging
@@ -9,8 +9,9 @@ import numpy as np
 
 from src.models.DFPV.nn_structure import build_extractor
 from src.models.DFPV.model import DFPVModel
-from src.data import generate_train_data, generate_test_data
-from src.data.data_class import PVTrainDataSetTorch, PVTestDataSetTorch, split_train_data, PVTrainDataSet
+from src.data.ate import generate_train_data_ate, generate_test_data_ate, get_preprocessor_ate
+from src.data.ate.data_class import PVTrainDataSetTorch, PVTestDataSetTorch, split_train_data, PVTrainDataSet, \
+    PVTestDataSet
 from src.utils.pytorch_linear_reg_utils import linear_reg_loss
 
 logger = logging.getLogger()
@@ -193,8 +194,15 @@ class DFPVTrainer(object):
 def dfpv_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                      one_mdl_dump_dir: Path, random_seed: int = 42, verbose: int = 0):
     dump_dir = one_mdl_dump_dir.joinpath(f"{random_seed}")
-    train_data = generate_train_data(data_config=data_config, rand_seed=random_seed)
-    test_data = generate_test_data(data_config=data_config)
+
+    train_data_org = generate_train_data_ate(data_config=data_config, rand_seed=random_seed)
+    test_data_org = generate_test_data_ate(data_config=data_config)
+
+    preprocessor = get_preprocessor_ate(data_config.get("preprocess", "Identity"))
+    train_data = preprocessor.preprocess_for_train(train_data_org)
+    test_data = preprocessor.preprocess_for_test_input(test_data_org)
+
+
     torch.manual_seed(random_seed)
     trainer = DFPVTrainer(data_config, model_param, False, dump_dir)
     mdl = trainer.train(train_data, verbose)
@@ -205,8 +213,11 @@ def dfpv_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
         test_data_t = test_data_t.to_gpu()
 
     pred: np.ndarray = mdl.predict_t(test_data_t.treatment).data.cpu().numpy()
+    pred = preprocessor.postprocess_for_prediction(pred)
     oos_loss = 0.0
     if test_data.structural is not None:
-        oos_loss: float = mdl.evaluate_t(test_data_t).data.item()
+        oos_loss: float = np.mean((pred - test_data_org.structural) ** 2)
+        if data_config["name"] in ["kpv", "deaner"]:
+            oos_loss = np.mean(np.abs(pred - test_data_org.structural))
     np.savetxt(one_mdl_dump_dir.joinpath(f"{random_seed}.pred.txt"), pred)
     return oos_loss

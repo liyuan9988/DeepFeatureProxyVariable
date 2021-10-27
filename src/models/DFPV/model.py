@@ -5,7 +5,7 @@ import numpy as np
 import logging
 
 from src.utils.pytorch_linear_reg_utils import fit_linear, linear_reg_pred, outer_prod, add_const_col
-from src.data.data_class import PVTrainDataSet, PVTestDataSet, PVTrainDataSetTorch, PVTestDataSetTorch
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet, PVTrainDataSetTorch, PVTestDataSetTorch
 
 logger = logging.getLogger()
 
@@ -199,6 +199,21 @@ class DFPVModel:
     def predict(self, treatment: np.ndarray):
         treatment_t = torch.tensor(treatment, dtype=torch.float32)
         return self.predict_t(treatment_t).data.numpy()
+
+    def predict_bridge(self, treatment: np.ndarray, output_proxy: np.ndarray):
+        treatment_t = torch.tensor(treatment, dtype=torch.float32)
+        output_proxy_t = torch.tensor(output_proxy, dtype=torch.float32)
+        return self.predict_bridge_t(treatment_t, output_proxy_t).data.numpy()
+
+    def predict_bridge_t(self, treatment: torch.Tensor, output_proxy: torch.Tensor):
+        treatment_feature = self.treatment_2nd_net(treatment)
+        output_proxy_feature = self.outcome_proxy_net(output_proxy)
+        feature = DFPVModel.augment_stage2_feature(output_proxy_feature,
+                                                   treatment_feature,
+                                                   None,
+                                                   self.add_stage2_intercept)
+        return linear_reg_pred(feature, self.stage2_weight)
+
 
     def evaluate_t(self, test_data: PVTestDataSetTorch):
         target = test_data.structural

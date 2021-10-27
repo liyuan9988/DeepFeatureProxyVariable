@@ -48,9 +48,9 @@ def modif_kron(x, y):
         return jnp.array(list(jnp.kron(x[:, i], y[:, i]).T for i in list(range(y.shape[1]))))
 
 @jax.jit
-def stage2_weights(mk_gamma_I, Sigma_inv):
-    n_row = mk_gamma_I.shape[0]
-    arr = [mat_mul(jnp.diag(mk_gamma_I[i, :]), Sigma_inv) for i in range(n_row)]
+def stage2_weights(Gamma_w, Sigma_inv):
+    n_row = Gamma_w.shape[0]
+    arr = [mat_mul(jnp.diag(Gamma_w[i, :]), Sigma_inv) for i in range(n_row)]
     return jnp.concatenate(arr, axis=0)
 
 @jax.jit

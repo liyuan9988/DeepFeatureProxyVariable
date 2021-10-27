@@ -4,8 +4,7 @@ from torch import nn
 import numpy as np
 import logging
 
-from src.utils.pytorch_linear_reg_utils import fit_linear, linear_reg_pred, outer_prod, add_const_col
-from src.data.data_class import PVTrainDataSet, PVTestDataSet, PVTrainDataSetTorch, PVTestDataSetTorch
+from src.data.ate.data_class import PVTestDataSet, PVTestDataSetTorch
 
 logger = logging.getLogger()
 

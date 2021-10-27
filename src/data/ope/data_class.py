@@ -6,7 +6,7 @@ import torch
 class OPETrainDataSet(NamedTuple):
     outcome_proxy: np.ndarray
     covariate: np.ndarray  # can be treatment or treatment_proxy
-
+    new_treatment: np.ndarray
 
 class OPETestDataSet(NamedTuple):
     treatment: np.ndarray

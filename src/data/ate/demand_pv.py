@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.random import default_rng
 
-from src.data.data_class import PVTrainDataSet, PVTestDataSet
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet
 
 
 def psi(t: np.ndarray) -> np.ndarray:

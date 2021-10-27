@@ -3,13 +3,13 @@ import numpy as np
 
 import pathlib
 
-from src.data.data_class import PVTrainDataSet, PVTestDataSet
+from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet
 
 DATA_PATH = pathlib.Path(__file__).resolve().parent.parent.parent.joinpath("data/")
 DATA_SEED = 1009
 
 
-def generate_train_kpv_experiment(n_sample: int, use_x: bool, seed=42, **kwargs):
+def generate_train_kpv_experiment(n_sample: int, use_x: bool = False, seed=42, **kwargs):
     with FileLock(DATA_PATH.joinpath("./data.lock")):
         data = np.load(DATA_PATH.joinpath('KPV_experiments/main_seed%s_std.npz' % DATA_SEED))
     rng = np.random.default_rng(seed)
