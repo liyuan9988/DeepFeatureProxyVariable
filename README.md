@@ -1,5 +1,6 @@
 # DeepFeatureProxyVariable
-Code for "Learning Deep Features in Instrumental Variable Regression" (https://arxiv.org/abs/2010.07154))
+Code for "
+Deep Proxy Causal Learning and its Application to Confounded Bandit Policy Evaluation" (https://arxiv.org/abs/2106.03907)
 
 ## How to Run codes?
 
@@ -16,4 +17,4 @@ Code for "Learning Deep Features in Instrumental Variable Regression" (https://a
    ```
    python main.py <path-to-configs> <problem_setting>
    ```
-   `<problem_setting>` can be selected from `ate` and `ope`, which corresponds to ate experiments and ope experiments in the paper. Make sure to input the corresponding config file to each setting. The result can be found in `dumps` folder. You can run in parallel by specifing  `-t` option.
+   `<problem_setting>` can be selected from `ate` and `ope`, which corresponds to ate experiments and policy evaluation experiments in the paper. Make sure to input the corresponding config file to each setting. The result can be found in `dumps` folder. You can run in parallel by specifing  `-t` option.
