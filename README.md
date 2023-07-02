@@ -2,7 +2,7 @@
 Code for "
 Deep Proxy Causal Learning and its Application to Confounded Bandit Policy Evaluation" (ICLR2023) (https://arxiv.org/abs/2106.03907)
 
-# Update from ICLR Camera Ready version
+# Update from Neurips [Camera Ready version](https://proceedings.neurips.cc/paper/2021/file/dcf3219715a7c9cd9286f19db46f2384-Paper.pdf)
 As found in [Kompa et al. 2022](https://arxiv.org/pdf/2205.09824.pdf), our old code may suffer from numerical instability in the Demand design experiment. This occurs because we applied ReLU activation at the final layer of features and they can all be zero during in the training. We updated our code to remove this final activation, which not only resolve numerical instability but also slightly increases the performance
 
 ![images](misc/Comparison_of_having_ReLU.png)
