@@ -1,8 +1,8 @@
 {
-    "n_repeat": 10,
+    "n_repeat": 1,
     "data": {
         "name" : "deaner",
-        "id": ["IM", "IR"],
+        "id": ["IR"],
         "preprocess" : "ScaleAll"
     },
     "model": {

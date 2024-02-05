@@ -15,7 +15,7 @@ from src.utils.jax_utils import Hadamard_prod, mat_mul, mat_trans, modif_kron, c
 
 
 def get_kernel_func(data_name: str) -> Tuple[AbsKernel, AbsKernel, AbsKernel, AbsKernel]:
-    if data_name == "dsprite":
+    if data_name in ("dsprite", "dsprite_ver2"):
         return BinaryKernel(), GaussianKernel(), GaussianKernel(), GaussianKernel()
     else:
         return ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel()

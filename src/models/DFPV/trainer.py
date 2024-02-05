@@ -194,7 +194,6 @@ class DFPVTrainer(object):
 def dfpv_experiments(data_config: Dict[str, Any], model_param: Dict[str, Any],
                      one_mdl_dump_dir: Path, random_seed: int = 42, verbose: int = 0):
     dump_dir = one_mdl_dump_dir.joinpath(f"{random_seed}")
-
     train_data_org = generate_train_data_ate(data_config=data_config, rand_seed=random_seed)
     test_data_org = generate_test_data_ate(data_config=data_config)
 

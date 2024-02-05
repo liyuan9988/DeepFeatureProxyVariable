@@ -1,0 +1,16 @@
+{
+    "n_repeat": 5,
+    "data": {
+        "name": "dsprite_ver2",
+        "n_sample": [
+            1000
+        ]
+    },
+    "model": {
+        "name": "kpv",
+        "lam1": 0.001,
+        "lam2": 0.001,
+        "split_ratio": 0.5,
+        "scale": 0.5
+    }
+}

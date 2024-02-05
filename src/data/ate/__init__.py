@@ -7,6 +7,7 @@ from src.data.ate.kpv_experiment_sim import generate_train_kpv_experiment, gener
 from src.data.ate.deaner_experiment import generate_train_deaner_experiment, generate_test_deaner_experiment
 from src.data.ate.demand_pv import generate_test_demand_pv, generate_train_demand_pv
 from src.data.ate.dsprite import generate_train_dsprite, generate_test_dsprite
+from src.data.ate.dsprite_ver2 import generate_train_dsprite_ver2, generate_test_dsprite_ver2
 from src.data.ate.data_class import PVTestDataSet, PVTrainDataSet
 from src.data.ate.cevae_experiment import generate_train_cevae_experiment, generate_test_cevae_experiment
 
@@ -19,6 +20,8 @@ def generate_train_data_ate(data_config: Dict[str, Any], rand_seed: int) -> PVTr
         return generate_train_demand_pv(seed=rand_seed, **data_config)
     elif data_name == "dsprite":
         return generate_train_dsprite(rand_seed=rand_seed, **data_config)
+    elif data_name == "dsprite_ver2":
+        return generate_train_dsprite_ver2(rand_seed=rand_seed, **data_config)
     elif data_name == "cevae":
         return generate_train_cevae_experiment(rand_seed=rand_seed, **data_config)
     elif data_name == "deaner":
@@ -35,6 +38,8 @@ def generate_test_data_ate(data_config: Dict[str, Any]) -> Optional[PVTestDataSe
         return generate_test_demand_pv()
     elif data_name == "dsprite":
         return generate_test_dsprite()
+    elif data_name == "dsprite_ver2":
+        return generate_test_dsprite_ver2()
     elif data_name == "cevae":
         return generate_test_cevae_experiment()
     elif data_name == "deaner":

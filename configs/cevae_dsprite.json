@@ -1,0 +1,18 @@
+{
+    "n_repeat": 20,
+    "data": {
+        "name": "dsprite_ver2",
+        "n_sample": [
+            1000,
+            5000
+        ]
+    },
+    "model": {
+        "name": "cevae",
+        "n_epoch": 1000,
+        "weight_decay": 0.0001,
+        "n_learning_sample": 10,
+        "hidden_dim": 20,
+        "early_stop": 5
+    }
+}

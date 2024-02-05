@@ -8,7 +8,7 @@ from src.data.ate.data_class import PVTrainDataSet, PVTestDataSet
 
 
 def get_kernel_func(data_name: str) -> Tuple[AbsKernel, AbsKernel, AbsKernel, AbsKernel]:
-    if data_name == "dsprite":
+    if data_name in ("dsprite", "dsprite_ver2"):
         return BinaryKernel(), GaussianKernel(), GaussianKernel(), GaussianKernel()
     elif data_name == "deaner":
         return GaussianKernel(), GaussianKernel(), GaussianKernel(), GaussianKernel()

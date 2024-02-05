@@ -33,11 +33,11 @@ class DspriteDistribution(AbstractDistribution):
 
     def p_x_z(self, z):
         return Normal(loc=self.pxz_mean_net(z),
-                      scale=self.torch.clip(self.pxz_sigma_net(z), min=0.1))
+                      scale=torch.clip(self.pxz_sigma_net(z), min=0.1))
 
     def p_t_z(self, z):
         return Normal(loc=self.ptz_mean_net(z),
-                      scale=self.torch.clip(self.ptz_sigma_net(z), min=0.1))
+                      scale=torch.clip(self.ptz_sigma_net(z), min=0.1))
 
     def p_y_zt(self, z, t):
         tz = torch.cat([t, z], dim=1)
