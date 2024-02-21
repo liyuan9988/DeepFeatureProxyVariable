@@ -22,7 +22,7 @@ def build_extractor(data_name: str, hidden_dim, n_sample):
     if data_name.startswith("demand"):
         logger.info("build for demand")
         return DemandDistribution(n_hidden_dim=hidden_dim, n_learning_sample=n_sample)
-    elif data_name in ("dsprite", "dsprite_ver2"):
+    elif data_name in ("dsprite_org", "dsprite"):
         logger.info("build for dsprite")
         return DspriteDistribution(n_hidden_dim=hidden_dim, n_learning_sample=n_sample)
     elif data_name == "cevae":

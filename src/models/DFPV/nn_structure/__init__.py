@@ -22,7 +22,7 @@ def build_extractor(data_name: str) -> Tuple[
     elif data_name.startswith("demand"):
         logger.info("build for demand")
         return build_net_for_demand()
-    elif data_name in ("dsprite", "dsprite_ver2") :
+    elif data_name in ("dsprite_org", "dsprite") :
         logger.info("build for dsprite")
         return build_net_for_dsprite()
     elif data_name == "deaner":
