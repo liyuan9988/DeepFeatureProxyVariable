@@ -18,9 +18,9 @@ def generate_train_data_ate(data_config: Dict[str, Any], rand_seed: int) -> PVTr
         return generate_train_kpv_experiment(seed=rand_seed, **data_config)
     elif data_name == "demand":
         return generate_train_demand_pv(seed=rand_seed, **data_config)
-    elif data_name == "dsprite":
+    elif data_name == "dsprite_org":
         return generate_train_dsprite(rand_seed=rand_seed, **data_config)
-    elif data_name == "dsprite_ver2":
+    elif data_name == "dsprite":
         return generate_train_dsprite_ver2(rand_seed=rand_seed, **data_config)
     elif data_name == "cevae":
         return generate_train_cevae_experiment(rand_seed=rand_seed, **data_config)
