@@ -16,6 +16,7 @@ def get_kernel_func(data_name: str) -> Tuple[AbsKernel, AbsKernel, AbsKernel, Ab
         return ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel(), ColumnWiseGaussianKernel()
 
 
+
 class PMMRModel:
     treatment_kernel_func: AbsKernel
     treatment_proxy_kernel_func: AbsKernel
@@ -62,17 +63,10 @@ class PMMRModel:
             backdoor_mat = self.backdoor_kernel_func.cal_kernel_mat(train_data.backdoor,
                                                                     train_data.backdoor)
             self.x_mean_vec = np.mean(backdoor_mat, axis=0)[:, np.newaxis]
-
-        G = treatment_mat * treatment_proxy_mat * backdoor_mat
+        W = treatment_mat * treatment_proxy_mat * backdoor_mat
         L = treatment_mat * outcome_proxy_mat * backdoor_mat
-        D, V = np.linalg.eigh(G)
-        Gsq = V @ np.diag(np.sqrt(np.maximum(D, 0.0))) @ V.T
-
-        self.alpha = Gsq @ np.linalg.solve(Gsq @ L @ Gsq + self.lam1 * n_train * np.eye(n_train),
-                                           Gsq @ train_data.outcome)
-
-
-
+        self.alpha = np.linalg.solve(L @ W @ L + self.lam1 * n_train * L + self.lam2 * n_train * np.eye(n_train),
+                                     L @ W @ train_data.outcome)
         self.w_mean_vec = np.mean(outcome_proxy_mat, axis=0)[:, np.newaxis]
         self.train_treatment = train_data.treatment
         self.train_outcome_proxy = train_data.outcome_proxy

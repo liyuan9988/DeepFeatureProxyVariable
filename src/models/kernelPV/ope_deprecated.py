@@ -49,11 +49,10 @@ class KernelPVOPEModel:
         test_kernel = self.covariate_kernel_func.cal_kernel_mat(self.train_covariate,
                                                                 covariate)
 
-        w_weight_pred = mat_mul(self.weight.T, test_kernel)
+        w_weight_pred = self.weight.T @ test_kernel
         test_treatment_kernel = self.base_model.treatment_kernel_func.cal_kernel_mat(self.base_model.train_treatment,
                                                                                      treatment)
-        return jnp.asarray(mat_mul(test_treatment_kernel.T * mat_mul(self.base_model.B.T, w_weight_pred).T,
-                                   self.base_model.alpha))
+        return jnp.asarray(jnp.diag(mat_mul(mat_mul(w_weight_pred.T, self.base_model.alpha), test_treatment_kernel)))
 
     def evaluate(self, test_data: OPETestDataSet):
         pred = self.predict(treatment=test_data.treatment, covariate=test_data.covariate)

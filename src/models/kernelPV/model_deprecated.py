@@ -64,13 +64,18 @@ class KernelPVModel:
             [(lam1_candi, cal_loocv_emb(kernel_1st, K_W1W1, lam1_candi)) for lam1_candi in lam1_candidate_list])
         self.lam1, loo = min(grid_search.items(), key=operator.itemgetter(1))
 
-    def tune_lam2(self, kernel_mat_2nd, train_data_2nd):
+    def tune_lam2(self, Gamma_w, kw1_gamma, kernel_mat_2nd, Sigma, train_data_2nd):
         n_train_2nd = train_data_2nd.treatment.shape[0]
+        mk_gamma_I = mat_trans(modif_kron(Gamma_w, np.eye(n_train_2nd)))
+        D_t = modif_kron(kw1_gamma, kernel_mat_2nd)
         lam2_candidate_list = np.logspace(np.log10(self.lam2_min), np.log10(self.lam2_max), self.n_lam2_search)
-        ky = train_data_2nd.outcome @ train_data_2nd.outcome.T
         grid_search = dict(
-            [(lam_candi, cal_loocv_emb(kernel_mat_2nd, ky, lam_candi)) for lam_candi in lam2_candidate_list])
+            [(lam2_candi, cal_loocv_alpha(D_t, Sigma, mk_gamma_I, train_data_2nd.treatment, lam2_candi)) for lam2_candi
+             in
+             lam2_candidate_list])
         self.lam2, loo = min(grid_search.items(), key=operator.itemgetter(1))
+        self.alpha = mat_mul(mk_gamma_I, jsla.solve(Sigma + n_train_2nd * self.lam2 * np.eye(n_train_2nd),
+                                                    train_data_2nd.outcome))
 
     def fit(self, train_data: PVTrainDataSet, data_name: str):
         train_data_1st, train_data_2nd = split_train_data(train_data, self.split_ratio)
@@ -99,43 +104,44 @@ class KernelPVModel:
         kernel_1st += self.lam1 * n_train_1st * np.eye(n_train_1st)
 
         kernel_1st_2nd = self.cal_kernel_mat_ZAX(train_data_1st, train_data_2nd)
-        self.B = jsla.solve(kernel_1st, kernel_1st_2nd)
+        Gamma_w = jsla.solve(kernel_1st, kernel_1st_2nd)
+
+        kw1_gamma = mat_mul(K_W1W1, Gamma_w)
+        g_kw1_g = mat_mul(mat_trans(Gamma_w), kw1_gamma)
 
         kernel_mat_2nd = self.treatment_kernel_func.cal_kernel_mat(train_data_2nd.treatment,
                                                                    train_data_2nd.treatment)
-        kernel_mat_2nd = kernel_mat_2nd * (self.B.T @ K_W1W1 @ self.B)
         if train_data_2nd.backdoor is not None:
             K_X2X2 = self.backdoor_kernel_func.cal_kernel_mat(train_data_2nd.backdoor,
                                                               train_data_2nd.backdoor)
-            kernel_mat_2nd = K_X2X2 * kernel_mat_2nd
+            kernel_mat_2nd = Hadamard_prod(kernel_mat_2nd, K_X2X2)
             self.x_mean_vec = np.mean(K_X2X2, axis=0)[:, np.newaxis]
 
+        Sigma = g_kw1_g * kernel_mat_2nd
+
         if self.lam2 is None:
-            self.tune_lam2(kernel_mat_2nd, train_data_2nd)
-
-        self.alpha = jsla.solve(kernel_mat_2nd + n_train_2nd * self.lam2 * np.eye(n_train_2nd),
-                                train_data_2nd.outcome)
-
+            self.tune_lam2(Gamma_w, kw1_gamma, kernel_mat_2nd, Sigma, train_data_2nd)
+        else:
+            self.alpha = stage2_weights(Gamma_w, jsla.solve(Sigma + n_train_2nd * self.lam2 * np.eye(n_train_2nd),
+                                                            train_data_2nd.outcome))
+        self.alpha = self.alpha.reshape(n_train_1st, n_train_2nd)
         self.w_mean_vec = np.mean(K_W1W1, axis=0)[:, np.newaxis]
-
         self.train_treatment = train_data_2nd.treatment
         self.train_outcome_proxy = train_data_1st.outcome_proxy
 
     def predict(self, treatment: np.ndarray) -> np.ndarray:
 
         test_kernel = self.treatment_kernel_func.cal_kernel_mat(self.train_treatment, treatment)
-        test_kernel = test_kernel * mat_mul(self.B.T, self.w_mean_vec)
         if self.x_mean_vec is not None:
             test_kernel = test_kernel * self.x_mean_vec
-        pred = np.array(mat_mul(test_kernel.T, self.alpha))
+        pred = jnp.asarray(mat_mul(mat_mul(self.w_mean_vec.T, self.alpha), test_kernel)).T
         return pred
 
     def predict_bridge(self, treatment: np.ndarray, output_proxy: np.ndarray):
         test_kernel = self.treatment_kernel_func.cal_kernel_mat(self.train_treatment, treatment)
         proxy_kernel = self.outcome_proxy_kernel_func.cal_kernel_mat(output_proxy, self.train_outcome_proxy)
-        test_kernel = test_kernel * mat_mul(self.B.T, proxy_kernel.T)
         n_test = treatment.shape[0]
-        pred = mat_mul(test_kernel.T, self.alpha)
+        pred = [jnp.asarray(mat_mul(mat_mul(proxy_kernel[[i], :], self.alpha), test_kernel[:, [i]])) for i in range(n_test)]
         pred = np.array(pred)
         if pred.ndim == 1:
             pred = pred[:, np.newaxis]
