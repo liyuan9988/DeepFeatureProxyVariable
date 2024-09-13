@@ -36,7 +36,10 @@ $$ Y = \frac{1}{12} (\mathrm{posY}-0.5) f_{\mathrm{struct}}(A) + \varepsilon$$
 
 which refects the position of sprite images $A$. To run the old dsprite experiment, please specify ``dsprite_org`` in the config files.
 
+### Update on KPV and PMMR (09.13.2024)
 
+A implementation now uses more stable formulation for both methods are found in [this paper](https://arxiv.org/pdf/2308.04585).
+Keep the original code as `deprecated`
 
 
 ## How to Run codes?
